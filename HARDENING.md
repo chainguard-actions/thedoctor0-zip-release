@@ -8,25 +8,35 @@
 
 **Harden Agent Version:** `1`
 
-Action **thedoctor0--zip-release/0.7.6** was hardened automatically. 1 finding(s) were identified and resolved across 1 iteration(s).
+Action **thedoctor0--zip-release/0.7.6** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### suspicious-run-content (severity: high)
 
-eval-dynamic: In entrypoint.sh, the run block executes `eval $INPUT_COMMAND` where `$INPUT_COMMAND` is populated directly from the user-controlled `inputs.command` action input (set via env: in action.yml). This allows any caller of the action to supply arbitrary shell commands that will be executed via `eval`, enabling full remote code execution on the runner. This matches the eval-dynamic pattern: `eval $VAR` where the variable holds attacker-controlled content.
+eval-dynamic: entrypoint.sh line 10 executes `eval $INPUT_COMMAND`, where `$INPUT_COMMAND` is directly derived from the user-controlled `inputs.command` action input (mapped via `env: INPUT_COMMAND: ${{ inputs.command }}` in action.yml). Using `eval` with attacker-controlled content allows arbitrary shell command execution on the runner. Matching pattern: `eval\s+[$]`.
 
 Locations:
 
-- `entrypoint.sh:9`
+- `entrypoint.sh:10`
+- `action.yml:47`
+
+### script-injection (severity: high)
+
+The `inputs.command` value is mapped to the `INPUT_COMMAND` environment variable in action.yml and then passed directly to `eval $INPUT_COMMAND` in entrypoint.sh (line 10). An attacker who controls the `command` input can inject and execute arbitrary shell commands on the runner. Although the input is routed through an env var (not interpolated directly in the run: string), the subsequent `eval` of that env var provides no protection against injection.
+
+Locations:
+
+- `entrypoint.sh:10`
+- `action.yml:47`
 
 ## Iteration Notes
 
 ### Iteration 1
 
-**Fixes applied:** suspicious-run-content
+**Fixes applied:** suspicious-run-content, script-injection
 
 **Notes:**
 
-Replaced `eval $INPUT_COMMAND` with `bash -c "$INPUT_COMMAND"` in entrypoint.sh line 9. The `eval` builtin with an unquoted, user-controlled variable allowed arbitrary shell command injection. Using `bash -c` with a properly quoted variable eliminates the eval-dynamic pattern while preserving the intended functionality of running a pre-zip command.
+Replaced `eval $INPUT_COMMAND` with `bash -c "$INPUT_COMMAND"` in entrypoint.sh line 10. The `eval` builtin performs double-evaluation of its argument, meaning shell metacharacters in the user-controlled `INPUT_COMMAND` variable get interpreted twice — once when the variable is expanded and again when eval processes the result. This allows an attacker to inject arbitrary shell commands via word splitting and glob expansion. Using `bash -c "$INPUT_COMMAND"` with proper quoting runs the command in a subshell without the extra evaluation layer, eliminating the eval-dynamic injection vector while preserving the intended functionality of running a pre-zip command.
 
