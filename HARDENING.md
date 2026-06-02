@@ -8,34 +8,25 @@
 
 **Harden Agent Version:** `1`
 
-Action **thedoctor0--zip-release/0.7.6** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
+Action **thedoctor0--zip-release/0.7.6** was hardened automatically. 1 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### suspicious-run-content (severity: high)
 
-eval-dynamic: entrypoint.sh executes `eval $INPUT_COMMAND` where `$INPUT_COMMAND` is sourced directly from the attacker-controlled `inputs.command` action input (mapped via env var `INPUT_COMMAND: ${{ inputs.command }}` in action.yml). This allows any caller of the action to inject and execute arbitrary shell commands on the runner. Matches the pattern `eval\s+[$]`.
+eval-dynamic: entrypoint.sh uses `eval $INPUT_COMMAND` where $INPUT_COMMAND is set directly from the attacker-controlled `inputs.command` input (via the env: block in action.yml). This allows an attacker who controls the `command` input to execute arbitrary shell commands on the runner. The pattern matches `eval $VAR` with a variable derived from user-supplied input.
 
 Locations:
 
-- `entrypoint.sh:9`
-
-### script-injection (severity: high)
-
-The action.yml composite step maps `inputs.command` to the env var `INPUT_COMMAND`, which is then passed to `eval $INPUT_COMMAND` in entrypoint.sh. Although the expression is routed through an env var rather than interpolated directly in the `run:` block, the `eval` of an attacker-controlled value is functionally equivalent to direct script injection — any caller can supply arbitrary shell commands via the `command` input.
-
-Locations:
-
-- `action.yml:47`
 - `entrypoint.sh:9`
 
 ## Iteration Notes
 
 ### Iteration 1
 
-**Fixes applied:** suspicious-run-content, script-injection
+**Fixes applied:** suspicious-run-content
 
 **Notes:**
 
-Replaced `eval $INPUT_COMMAND` with `bash -c -- "$INPUT_COMMAND"` in entrypoint.sh (line 9). The `eval` construct was dangerous because it performed word-splitting on the unquoted variable and re-parsed attacker-controlled input as shell code. The replacement properly quotes the variable and uses `--` to prevent option injection. The action.yml was already correctly routing the input through an env var rather than direct interpolation, so no changes were needed there.
+Replaced `eval $INPUT_COMMAND` with `bash -c "$INPUT_COMMAND"` in entrypoint.sh line 9. The `eval` builtin was dangerous because it performs double-evaluation of shell metacharacters, allowing an attacker controlling the `command` input to inject arbitrary shell commands. Using `bash -c` with a properly quoted variable removes the extra layer of shell interpretation while preserving the intended functionality of running a pre-zip command.
 

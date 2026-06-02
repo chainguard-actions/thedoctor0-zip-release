@@ -7,7 +7,7 @@ printf "\n📦 Creating %s archive...\n" "$INPUT_TYPE"
 
 if [ -n "$INPUT_COMMAND" ]
 then
-  bash -c -- "$INPUT_COMMAND"
+  bash -c "$INPUT_COMMAND"
 fi
 
 if [ "$INPUT_DIRECTORY" != "." ] 
