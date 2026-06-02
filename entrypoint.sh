@@ -7,11 +7,7 @@ printf "\n📦 Creating %s archive...\n" "$INPUT_TYPE"
 
 if [ -n "$INPUT_COMMAND" ]
 then
-  _cmd_file="$(mktemp)"
-  printf '%s\n' "$INPUT_COMMAND" > "$_cmd_file"
-  chmod +x "$_cmd_file"
-  bash "$_cmd_file"
-  rm -f "$_cmd_file"
+  bash -c "$INPUT_COMMAND"
 fi
 
 if [ "$INPUT_DIRECTORY" != "." ] 
