@@ -14,7 +14,7 @@ Action **thedoctor0--zip-release/0.7.6** was hardened automatically. 1 finding(s
 
 ### suspicious-run-content (severity: high)
 
-eval-dynamic: entrypoint.sh uses `eval $INPUT_COMMAND` where $INPUT_COMMAND is set directly from the attacker-controlled `inputs.command` input (via the env: block in action.yml). This allows an attacker who controls the `command` input to execute arbitrary shell commands on the runner. The pattern matches `eval $VAR` with a variable derived from user-supplied input.
+eval-dynamic: In entrypoint.sh, the run block executes `eval $INPUT_COMMAND` where `$INPUT_COMMAND` is populated directly from the user-controlled `inputs.command` action input (set via env: in action.yml). This allows any caller of the action to supply arbitrary shell commands that will be executed via `eval`, enabling full remote code execution on the runner. This matches the eval-dynamic pattern: `eval $VAR` where the variable holds attacker-controlled content.
 
 Locations:
 
@@ -28,5 +28,5 @@ Locations:
 
 **Notes:**
 
-Replaced `eval $INPUT_COMMAND` with `bash -c "$INPUT_COMMAND"` in entrypoint.sh line 9. The `eval` builtin was dangerous because it performs double-evaluation of shell metacharacters, allowing an attacker controlling the `command` input to inject arbitrary shell commands. Using `bash -c` with a properly quoted variable removes the extra layer of shell interpretation while preserving the intended functionality of running a pre-zip command.
+Replaced `eval $INPUT_COMMAND` with `bash -c "$INPUT_COMMAND"` in entrypoint.sh line 9. The `eval` builtin with an unquoted, user-controlled variable allowed arbitrary shell command injection. Using `bash -c` with a properly quoted variable eliminates the eval-dynamic pattern while preserving the intended functionality of running a pre-zip command.
 
