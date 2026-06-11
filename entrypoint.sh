@@ -10,53 +10,55 @@ then
   cd "$INPUT_DIRECTORY"
 fi
 
+# Split space-separated inputs into arrays safely (no shell metacharacter injection)
+read -ra CUSTOM_ARGS <<< "$INPUT_CUSTOM"
+read -ra EXCLUSIONS_LIST <<< "$INPUT_EXCLUSIONS"
+read -ra RECURSIVE_EXCLUSIONS_LIST <<< "$INPUT_RECURSIVE_EXCLUSIONS"
+
 if [ "$INPUT_TYPE" = "zip" ] 
 then
   if [ "$RUNNER_OS" = "Windows" ]
   then
     if [ -z "$INPUT_EXCLUSIONS" ] 
     then
-      7z a -tzip "$INPUT_FILENAME" "$INPUT_PATH" $INPUT_CUSTOM || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
+      7z a -tzip "$INPUT_FILENAME" "$INPUT_PATH" "${CUSTOM_ARGS[@]}" || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
     else
-      EXCLUSIONS=''
+      EXCLUSIONS=()
 
-      for EXCLUSION in $INPUT_EXCLUSIONS
+      for EXCLUSION in "${EXCLUSIONS_LIST[@]}"
       do
-        EXCLUSIONS+=" -x!"
-        EXCLUSIONS+=$EXCLUSION
+        EXCLUSIONS+=("-x!$EXCLUSION")
       done
 
-      for EXCLUSION in $INPUT_RECURSIVE_EXCLUSIONS
+      for EXCLUSION in "${RECURSIVE_EXCLUSIONS_LIST[@]}"
       do
-        EXCLUSIONS+=" -xr!"
-        EXCLUSIONS+=$EXCLUSION
+        EXCLUSIONS+=("-xr!$EXCLUSION")
       done
 
-      7z a -tzip "$INPUT_FILENAME" "$INPUT_PATH" $EXCLUSIONS $INPUT_CUSTOM || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
+      7z a -tzip "$INPUT_FILENAME" "$INPUT_PATH" "${EXCLUSIONS[@]}" "${CUSTOM_ARGS[@]}" || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
     fi
   else
     if [ -z "$INPUT_EXCLUSIONS" ]
     then
-      zip -r "$INPUT_FILENAME" "$INPUT_PATH" $INPUT_CUSTOM || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
+      zip -r "$INPUT_FILENAME" "$INPUT_PATH" "${CUSTOM_ARGS[@]}" || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
     else
-      zip -r "$INPUT_FILENAME" "$INPUT_PATH" -x $INPUT_EXCLUSIONS $INPUT_CUSTOM || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
+      zip -r "$INPUT_FILENAME" "$INPUT_PATH" -x "${EXCLUSIONS_LIST[@]}" "${CUSTOM_ARGS[@]}" || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
     fi
   fi
 elif [ "$INPUT_TYPE" = "tar" ] || [ "$INPUT_TYPE" = "tar.gz" ] 
 then
   if [ -z "$INPUT_EXCLUSIONS" ] 
   then
-    tar -zcvf "$INPUT_FILENAME" "$INPUT_PATH" $INPUT_CUSTOM || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
+    tar -zcvf "$INPUT_FILENAME" "$INPUT_PATH" "${CUSTOM_ARGS[@]}" || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
   else
-    EXCLUSIONS=''
+    EXCLUSIONS=()
 
-    for EXCLUSION in $INPUT_EXCLUSIONS
+    for EXCLUSION in "${EXCLUSIONS_LIST[@]}"
     do
-      EXCLUSIONS+=" --exclude="
-      EXCLUSIONS+=$EXCLUSION
+      EXCLUSIONS+=("--exclude=$EXCLUSION")
     done
 
-    tar $EXCLUSIONS -zcvf "$INPUT_FILENAME" "$INPUT_PATH" $INPUT_CUSTOM || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
+    tar "${EXCLUSIONS[@]}" -zcvf "$INPUT_FILENAME" "$INPUT_PATH" "${CUSTOM_ARGS[@]}" || { printf "\n⛔ Unable to create %s archive.\n" "$INPUT_TYPE"; exit 1;  }
   fi
 else
   printf "\n⛔ Invalid archiving tool.\n"; exit 1;
