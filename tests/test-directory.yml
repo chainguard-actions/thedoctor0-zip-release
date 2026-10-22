@@ -1,0 +1,51 @@
+name: Test working directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare test data
+        run: |
+          rm -rf zt-dir
+          mkdir -p zt-dir/inner
+          echo "one" > zt-dir/inner/one.txt
+          echo "two" > zt-dir/two.txt
+      - id: action
+        uses: .
+        with:
+          filename: dir.zip
+          path: .
+          directory: zt-dir
+          exclusions: dir.zip
+      - name: Assert archive created inside working directory with relative paths
+        run: |
+          set -e
+          ZIP="$GITHUB_WORKSPACE/zt-dir/dir.zip"
+          if [ ! -f "$ZIP" ]; then
+            echo "FAIL: $ZIP not found"
+            ls -laR "$GITHUB_WORKSPACE/zt-dir"
+            exit 1
+          fi
+          if [ -f "$GITHUB_WORKSPACE/dir.zip" ]; then
+            echo "FAIL: archive unexpectedly created in workspace root"
+            exit 1
+          fi
+          if command -v unzip >/dev/null 2>&1; then
+            LIST="$(unzip -Z1 "$ZIP")"
+          else
+            LIST="$(python3 -c 'import zipfile,sys; print("\n".join(zipfile.ZipFile(sys.argv[1]).namelist()))' "$ZIP")"
+          fi
+          echo "contents:"; echo "$LIST"
+          for f in two.txt inner/one.txt; do
+            if ! echo "$LIST" | grep -qE "^(\./)?$f\$"; then
+              echo "FAIL: $f missing from archive"
+              exit 1
+            fi
+          done
+          if echo "$LIST" | grep -q "zt-dir/"; then
+            echo "FAIL: paths should be relative to working directory"
+            exit 1
+          fi
+          echo "PASS"

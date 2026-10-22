@@ -1,0 +1,40 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare test data
+        run: |
+          rm -rf zt-basic zt-basic.zip
+          mkdir -p zt-basic/sub
+          echo "hello" > zt-basic/a.txt
+          echo "world" > zt-basic/sub/b.txt
+      - id: action
+        uses: .
+        with:
+          filename: zt-basic.zip
+          path: zt-basic
+      - name: Assert archive created with expected content
+        run: |
+          set -e
+          if [ ! -f "$GITHUB_WORKSPACE/zt-basic.zip" ]; then
+            echo "FAIL: zt-basic.zip not found"
+            ls -la "$GITHUB_WORKSPACE"
+            exit 1
+          fi
+          if command -v unzip >/dev/null 2>&1; then
+            LIST="$(unzip -Z1 "$GITHUB_WORKSPACE/zt-basic.zip")"
+          else
+            LIST="$(python3 -c 'import zipfile,sys; print("\n".join(zipfile.ZipFile(sys.argv[1]).namelist()))' "$GITHUB_WORKSPACE/zt-basic.zip")"
+          fi
+          echo "contents:"; echo "$LIST"
+          for f in zt-basic/a.txt zt-basic/sub/b.txt; do
+            if ! echo "$LIST" | grep -qx "$f"; then
+              echo "FAIL: $f missing from archive"
+              exit 1
+            fi
+          done
+          echo "PASS"

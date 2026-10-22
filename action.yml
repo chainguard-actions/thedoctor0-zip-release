@@ -1,0 +1,28 @@
+name: 'Zip Release'
+author: 'TheDoctor0'
+branding:
+  icon: 'archive'
+  color: 'yellow'
+description: 'Make a zip archive from specified files and directories as workflow action'
+inputs:
+  filename:
+    description: 'Filename for archive'
+    required: true
+    default: 'release.zip'
+  path:
+    description: 'Base path for archive files'
+    default: '.'
+  directory:
+    description: 'Working directory before zipping'
+    default: '.'
+  exclusions:
+    description: 'List of excluded files/directories'
+    default: ''
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.filename }}
+    - ${{ inputs.path }}
+    - ${{ inputs.directory }}
+    - ${{ inputs.exclusions }}

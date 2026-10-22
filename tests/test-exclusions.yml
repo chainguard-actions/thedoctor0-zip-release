@@ -1,0 +1,43 @@
+name: Test exclusions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Prepare test data
+        run: |
+          rm -rf zt-excl zt-excl.zip
+          mkdir -p zt-excl
+          echo "keep" > zt-excl/keep.txt
+          echo "secret" > zt-excl/secret.txt
+      - id: action
+        uses: .
+        with:
+          filename: zt-excl.zip
+          path: zt-excl
+          exclusions: zt-excl/secret.txt
+      - name: Assert excluded file is absent
+        run: |
+          set -e
+          ZIP="$GITHUB_WORKSPACE/zt-excl.zip"
+          if [ ! -f "$ZIP" ]; then
+            echo "FAIL: $ZIP not found"
+            exit 1
+          fi
+          if command -v unzip >/dev/null 2>&1; then
+            LIST="$(unzip -Z1 "$ZIP")"
+          else
+            LIST="$(python3 -c 'import zipfile,sys; print("\n".join(zipfile.ZipFile(sys.argv[1]).namelist()))' "$ZIP")"
+          fi
+          echo "contents:"; echo "$LIST"
+          if ! echo "$LIST" | grep -qx "zt-excl/keep.txt"; then
+            echo "FAIL: keep.txt missing"
+            exit 1
+          fi
+          if echo "$LIST" | grep -q "secret.txt"; then
+            echo "FAIL: secret.txt should have been excluded"
+            exit 1
+          fi
+          echo "PASS"

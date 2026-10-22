@@ -1,18 +1,30 @@
-# thedoctor0/zip-release
+# Zip Release [![License](https://img.shields.io/github/license/TheDoctor0/zip-release)](https://github.com/TheDoctor0/zip-release/blob/master/LICENSE)
+GitHub action that can be used to create release zip archive.
 
-Make an archive from specified files and directories as workflow action
+## Usage
+An example workflow config:
+```
+name: Create Archive
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Archive Release
+      uses: thedoctor0/zip-release@master
+      with:
+        filename: 'release.zip'
+        exclusions: '*.git* /*node_modules/* .editorconfig'
+```
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/thedoctor0/zip-release](https://github.com/thedoctor0/zip-release).
-
-## Versions
-
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| 0.7.1 | [`0.7.1`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.1) | [`a24011d`](https://github.com/thedoctor0/zip-release/commit/a24011d8d445e4da5935a7e73c1f98e22a439464) |
-| 0.7.2 | [`0.7.2`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.2) | [`b83d190`](https://github.com/thedoctor0/zip-release/commit/b83d190120fd312e55085447f958f8263b44098a) |
-| 0.7.3 | [`0.7.3`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.3) | [`0144f6c`](https://github.com/thedoctor0/zip-release/commit/0144f6c1942ee83d39262864aea253e96acf3d4f) |
-| 0.7.5 | [`0.7.5`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.5) | [`7fddfdd`](https://github.com/thedoctor0/zip-release/commit/7fddfdd07cadb5b8c6c0dbcdcec17f8cd7784b80) |
-| 0.7.6 | [`0.7.6`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.6) | [`b57d897`](https://github.com/thedoctor0/zip-release/commit/b57d897cb5d60cb78b51a507f63fa184cfe35554) |
+## Arguments
+| Argument | Description | Default |
+|---|---|---|
+| filename | Filename for archive | release.zip |
+| path | Base path for archive files | . |
+| directory | Working directory before zipping | . |
+| exclusions | List of excluded files/directories | |
 
 ## Privacy
 
