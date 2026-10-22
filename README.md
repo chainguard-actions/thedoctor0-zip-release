@@ -13,6 +13,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | 0.7.3 | [`0.7.3`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.3) | [`0144f6c`](https://github.com/thedoctor0/zip-release/commit/0144f6c1942ee83d39262864aea253e96acf3d4f) |
 | 0.7.5 | [`0.7.5`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.5) | [`7fddfdd`](https://github.com/thedoctor0/zip-release/commit/7fddfdd07cadb5b8c6c0dbcdcec17f8cd7784b80) |
 | 0.7.6 | [`0.7.6`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/0.7.6) | [`b57d897`](https://github.com/thedoctor0/zip-release/commit/b57d897cb5d60cb78b51a507f63fa184cfe35554) |
+| v0.3.0 | [`v0.3.0`](https://github.com/chainguard-actions/thedoctor0-zip-release/tree/v0.3.0) | [`5c929a3`](https://github.com/thedoctor0/zip-release/commit/5c929a3643d36fb8f4b06b11534f36343aa4f22c) |
 
 ## Privacy
 
